@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Math Challenge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Math Challenge, {{ current_user.username }}!</h2>
+        <div id="question-container">
+            <p id="question">Click "New Question" to start!</p>
+            <input type="number" id="answer" placeholder="Your answer">
+            <button onclick="checkAnswer()">Submit Answer</button>
+        </div>
+
+        <div class="score">
+            <h3>Your Score</h3>
+            <p>Total Questions: <span id="question_count">0</span></p>
+            <p>Correct Answers: <span id="correct">0</span></p>
+            <p>Incorrect Answers: <span id="incorrect">0</span></p>
+            <p>Attempts: <span id="attempt">0</span></p>
+        </div>
+
+        <div class="links">
+            <button onclick="getNewQuestion()">New Question</button>
+            <a href="{{ url_for('rating') }}" class="button">View Rating</a>
+        </div>
+
+        <p><a href="{{ url_for('logout') }}">Logout</a></p>
+        <p id="feedback" class="feedback" style="display: none;"></p>
+    </div>
+
+    <script>
+        function getNewQuestion() {
+            fetch('/get_question')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('question').textContent = data.question + ' = ?';
+                    document.getElementById('answer').value = '';
+                    document.getElementById('feedback').style.display = 'none';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function checkAnswer() {
+            const answer = document.getElementById('answer').value;
+            if (!answer) return;
+
+            fetch(`/check_result?answer=${answer}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('correct').textContent = data.stats.correct;
+                    document.getElementById('incorrect').textContent = data.stats.incorrect;
+                    document.getElementById('attempt').textContent = data.stats.attempt;
+                    document.getElementById('question_count').textContent = data.stats.question_count;
+
+                    const feedback = document.getElementById('feedback');
+                    feedback.style.display = 'block';
+                    if (data.correct) {
+                        feedback.textContent = 'Correct!';
+                        feedback.className = 'feedback success';
+                        document.getElementById('question').textContent = data.stats.question + ' = ?';
+                    } else {
+                        feedback.textContent = 'Wrong! Try again.';
+                        feedback.className = 'feedback error';
+                    }
+                    document.getElementById('answer').value = '';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
